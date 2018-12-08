@@ -2,12 +2,26 @@ import Login from './views/Login.vue'
 import NotFound from './views/404.vue'
 import Home from './views/Home.vue'
 import Main from './views/Main.vue'
-import Table from './views/nav1/Table.vue'
-import Form from './views/nav1/Form.vue'
-import user from './views/nav1/user.vue'
-import Page4 from './views/nav2/Page4.vue'
-import Page5 from './views/nav2/Page5.vue'
-import Page6 from './views/nav3/Page6.vue'
+
+// 文章
+import ArticleList from './views/nav1/ArticleList.vue'
+import AddArticle from './views/nav1/AddArticle.vue'
+import ArticleTypeList from './views/nav1/ArticleTypeList.vue'
+import RecycleBin from './views/nav1/RecycleBin.vue'
+
+// 下载
+import DownloadList from './views/nav2/DownloadList.vue'
+import DownloadTypeList from './views/nav2/DownloadTypeList.vue'
+
+// 图床
+import ConfigureCrawler from './views/nav3/ConfigureCrawler.vue'
+import PictureList from './views/nav3/PictureList.vue'
+
+// 网站管理
+import UserList from './views/nav4/UserList.vue'
+import RoleList from './views/nav4/RoleList.vue'
+
+// 报表
 import echarts from './views/charts/echarts.vue'
 
 let routes = [
@@ -31,9 +45,28 @@ let routes = [
     iconCls: 'fa fa-id-card-o', //图标样式class el-icon-message
     children: [
       { path: '/main', component: Main, name: '主页', hidden: true },
-      { path: '/table', component: Table, name: '文章列表' },
-      { path: '/form', component: Form, name: '发布文章' },
-      { path: '/user', component: user, name: '文章类型' }
+      { path: '/articleList', component: ArticleList, name: '文章列表' },
+      { path: '/addArticle', component: AddArticle, name: '发布文章' },
+      {
+        path: '/articleTypeList',
+        component: ArticleTypeList,
+        name: '文章类型'
+      },
+      { path: '/recycleBin', component: RecycleBin, name: '回收站' }
+    ]
+  },
+  {
+    path: '/',
+    component: Home,
+    name: '下载',
+    iconCls: 'fa fa-id-card-o', //图标样式class el-icon-message
+    children: [
+      { path: '/downloadList', component: DownloadList, name: '下载列表' },
+      {
+        path: '/downloadTypeList',
+        component: DownloadTypeList,
+        name: '下载类型'
+      }
     ]
   },
   {
@@ -42,8 +75,12 @@ let routes = [
     name: '图床',
     iconCls: 'fa fa-id-card-o', //图标样式class el-icon-message
     children: [
-      { path: '/table', component: Table, name: '配置爬虫' },
-      { path: '/form', component: Form, name: '图片列表' }
+      {
+        path: '/configureCrawler',
+        component: ConfigureCrawler,
+        name: '配置爬虫'
+      },
+      { path: '/pictureList', component: PictureList, name: '图片列表' }
     ]
   },
   {
@@ -52,8 +89,8 @@ let routes = [
     name: '网站管理',
     iconCls: 'fa fa-address-card',
     children: [
-      { path: '/page6', component: Page6, name: '用户管理' },
-      { path: '/page7', component: Page6, name: '角色管理' }
+      { path: '/userList', component: UserList, name: '用户管理' },
+      { path: '/roleList', component: RoleList, name: '角色管理' }
     ]
   },
   {

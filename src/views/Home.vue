@@ -128,7 +128,7 @@
 export default {
   data () {
     return {
-      sysName: 'VUEADMIN',
+      sysName: '后台管理系统',
       collapsed: false,
       sysUserName: '',
       sysUserAvatar: '',
