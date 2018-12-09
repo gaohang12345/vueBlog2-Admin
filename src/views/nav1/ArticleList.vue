@@ -49,6 +49,12 @@
                        :formatter="formatSex"
                        sortable>
       </el-table-column>
+      <el-table-column prop="sex"
+                       label="文章状态"
+                       width="120"
+                       :formatter="formatSex"
+                       sortable>
+      </el-table-column>
       <el-table-column prop="birth"
                        label="发布日期"
                        width="120"
@@ -61,7 +67,7 @@
       </el-table-column>
       <el-table-column label="操作"
                        width="150">
-        <template scope="scope">
+        <template slot-scope="scope">
           <el-button size="small"
                      @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
           <el-button type="danger"
@@ -94,12 +100,17 @@
                label-width="80px"
                :rules="editFormRules"
                ref="editForm">
-        <el-form-item label="姓名"
+        <el-form-item label="文章标题"
                       prop="name">
           <el-input v-model="editForm.name"
                     auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="性别">
+        <el-form-item label="文章描述">
+          <el-input-number v-model="editForm.age"
+                           :min="0"
+                           :max="200"></el-input-number>
+        </el-form-item>
+        <el-form-item label="文章类型">
           <el-radio-group v-model="editForm.sex">
             <el-radio class="radio"
                       :label="1">男</el-radio>
@@ -107,20 +118,26 @@
                       :label="0">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="年龄">
-          <el-input-number v-model="editForm.age"
-                           :min="0"
-                           :max="200"></el-input-number>
-        </el-form-item>
-        <el-form-item label="生日">
+        <el-form-item label="缩略图">
           <el-date-picker type="date"
                           placeholder="选择日期"
                           v-model="editForm.birth"></el-date-picker>
         </el-form-item>
-        <el-form-item label="地址">
-          <el-input type="textarea"
-                    v-model="editForm.addr"></el-input>
-        </el-form-item>
+        <div class="edit_container">
+          <!--  新增时输入 -->
+          <quill-editor v-model="editForm.content"
+                        ref="myQuillEditor"
+                        :options="editForm.editorOption"
+                        @blur="onEditorBlur($event)"
+                        @focus="onEditorFocus($event)"
+                        @change="onEditorChange($event)">
+          </quill-editor>
+          <!-- 从数据库读取展示 -->
+          <div v-html="editForm.str"
+               class="ql-editor">
+            {{editForm.str}}
+          </div>
+        </div>
       </el-form>
       <div slot="footer"
            class="dialog-footer">
@@ -134,17 +151,23 @@
     <!--新增界面-->
     <el-dialog title="新增"
                v-model="addFormVisible"
-               :close-on-click-modal="false">
+               :close-on-click-modal="false"
+               width="90%">
       <el-form :model="addForm"
                label-width="80px"
                :rules="addFormRules"
                ref="addForm">
-        <el-form-item label="姓名"
+        <el-form-item label="文章标题"
                       prop="name">
           <el-input v-model="addForm.name"
                     auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="性别">
+        <el-form-item label="文章描述">
+          <el-input-number v-model="addForm.age"
+                           :min="0"
+                           :max="200"></el-input-number>
+        </el-form-item>
+        <el-form-item label="文章类型">
           <el-radio-group v-model="addForm.sex">
             <el-radio class="radio"
                       :label="1">男</el-radio>
@@ -152,20 +175,26 @@
                       :label="0">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="年龄">
-          <el-input-number v-model="addForm.age"
-                           :min="0"
-                           :max="200"></el-input-number>
-        </el-form-item>
-        <el-form-item label="生日">
+        <el-form-item label="缩略图">
           <el-date-picker type="date"
                           placeholder="选择日期"
                           v-model="addForm.birth"></el-date-picker>
         </el-form-item>
-        <el-form-item label="地址">
-          <el-input type="textarea"
-                    v-model="addForm.addr"></el-input>
-        </el-form-item>
+        <div class="edit_container">
+          <!--  新增时输入 -->
+          <quill-editor v-model="addForm.content"
+                        ref="myQuillEditor"
+                        :options="addForm.editorOption"
+                        @blur="onEditorBlur($event)"
+                        @focus="onEditorFocus($event)"
+                        @change="onEditorChange($event)">
+          </quill-editor>
+          <!-- 从数据库读取展示 -->
+          <div v-html="addForm.str"
+               class="ql-editor">
+            {{addForm.str}}
+          </div>
+        </div>
       </el-form>
       <div slot="footer"
            class="dialog-footer">
@@ -183,7 +212,16 @@ import util from '../../common/js/util'
 //import NProgress from 'nprogress'
 import { getUserListPage, removeUser, batchRemoveUser, editUser, addUser } from '../../api/api';
 
+// 引入vue编辑器
+import { quillEditor } from "vue-quill-editor";
+import 'quill/dist/quill.core.css';
+import 'quill/dist/quill.snow.css';
+import 'quill/dist/quill.bubble.css';
+
 export default {
+  components: {
+    quillEditor
+  },
   data () {
     return {
       filters: {
@@ -209,7 +247,10 @@ export default {
         sex: -1,
         age: 0,
         birth: '',
-        addr: ''
+        addr: '',
+        content: ``,
+        str: '',
+        editorOption: {}
       },
 
       addFormVisible: false,//新增界面是否显示
@@ -225,7 +266,10 @@ export default {
         sex: -1,
         age: 0,
         birth: '',
-        addr: ''
+        addr: '',
+        content: ``,
+        str: '',
+        editorOption: {}
       }
 
     }
@@ -363,7 +407,31 @@ export default {
       }).catch(() => {
 
       });
+    },
+    onEditorReady (editor) {
+      // 准备编辑器
+
+    },
+    onEditorBlur () {
+      // 失去焦点事件
+    },
+    onEditorFocus () {
+      // 获得焦点事件
+    },
+    onEditorChange () {
+      // 内容改变事件
+    },
+    escapeStringHTML (str) {
+      // 转码
+      str = str.replace(/&lt;/g, '<');
+      str = str.replace(/&gt;/g, '>');
+      return str;
     }
+  },
+  computed: {
+    editor () {
+      return this.$refs.myQuillEditor.quill;
+    },
   },
   mounted () {
     this.getUsers();

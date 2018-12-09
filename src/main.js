@@ -1,6 +1,7 @@
 import babelpolyfill from 'babel-polyfill'
 import Vue from 'vue'
 import App from './App'
+// import VueQuillEditor from 'vue-quill-editor'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
 //import './assets/theme/theme-green/index.css'
@@ -11,12 +12,13 @@ import Vuex from 'vuex'
 //import 'nprogress/nprogress.css'
 import routes from './routes'
 import Mock from './mock'
-Mock.bootstrap();
+Mock.bootstrap()
 import 'font-awesome/css/font-awesome.min.css'
 
 Vue.use(ElementUI)
 Vue.use(VueRouter)
 Vue.use(Vuex)
+// Vue.use(VueQuillEditor)
 
 //NProgress.configure({ showSpinner: false });
 
@@ -27,9 +29,9 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   //NProgress.start();
   if (to.path == '/login') {
-    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('user')
   }
-  let user = JSON.parse(sessionStorage.getItem('user'));
+  let user = JSON.parse(sessionStorage.getItem('user'))
   if (!user && to.path != '/login') {
     next({ path: '/login' })
   } else {
@@ -49,4 +51,3 @@ new Vue({
   //components: { App }
   render: h => h(App)
 }).$mount('#app')
-
