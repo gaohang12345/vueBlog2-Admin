@@ -12,7 +12,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary"
-                     v-on:click="getUsers">查询</el-button>
+                     v-on:click="getArticleTypeList">查询</el-button>
         </el-form-item>
         <el-form-item>
           <el-button type="primary"
@@ -33,18 +33,17 @@
       <el-table-column type="index"
                        width="60">
       </el-table-column>
-      <el-table-column prop="name"
+      <el-table-column prop="code"
                        label="类型编码"
                        width="120"
                        sortable>
       </el-table-column>
-      <el-table-column prop="sex"
+      <el-table-column prop="title"
                        label="类型名称"
                        width="120"
-                       :formatter="formatSex"
                        sortable>
       </el-table-column>
-      <el-table-column prop="age"
+      <el-table-column prop="sort"
                        label="排序"
                        width="120"
                        sortable>
@@ -170,7 +169,7 @@
 <script>
 import util from '../../common/js/util'
 //import NProgress from 'nprogress'
-import { getUserListPage, removeUser, batchRemoveUser, editUser, addUser } from '../../api/api';
+import { getArticleTypeList } from '../../api/api';
 
 export default {
   data () {
@@ -220,23 +219,18 @@ export default {
     }
   },
   methods: {
-    //性别显示转换
-    formatSex: function (row, column) {
-      return row.sex == 1 ? '男' : row.sex == 0 ? '女' : '未知';
-    },
     handleCurrentChange (val) {
       this.page = val;
-      this.getUsers();
+      this.getArticleTypeList();
     },
     //获取用户列表
-    getUsers () {
+    getArticleTypeList () {
       let para = {
-        page: this.page,
-        name: this.filters.name
+        page: this.page
       };
       this.listLoading = true;
       //NProgress.start();
-      getUserListPage(para).then((res) => {
+      getArticleTypeList(para).then((res) => {
         this.total = res.data.total;
         this.users = res.data.users;
         this.listLoading = false;
@@ -258,7 +252,7 @@ export default {
             message: '删除成功',
             type: 'success'
           });
-          this.getUsers();
+          this.getArticleTypeList();
         });
       }).catch(() => {
 
@@ -298,7 +292,7 @@ export default {
               });
               this.$refs['editForm'].resetFields();
               this.editFormVisible = false;
-              this.getUsers();
+              this.getArticleTypeList();
             });
           });
         }
@@ -322,7 +316,7 @@ export default {
               });
               this.$refs['addForm'].resetFields();
               this.addFormVisible = false;
-              this.getUsers();
+              this.getArticleTypeList();
             });
           });
         }
@@ -347,7 +341,7 @@ export default {
             message: '删除成功',
             type: 'success'
           });
-          this.getUsers();
+          this.getArticleTypeList();
         });
       }).catch(() => {
 
@@ -355,7 +349,7 @@ export default {
     }
   },
   mounted () {
-    this.getUsers();
+    this.getArticleTypeList();
   }
 }
 

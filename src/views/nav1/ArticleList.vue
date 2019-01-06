@@ -7,12 +7,28 @@
       <el-form :inline="true"
                :model="filters">
         <el-form-item>
-          <el-input v-model="filters.name"
+          <el-input v-model="filters.title"
                     placeholder="文章名称"></el-input>
+        </el-form-item>
+        <el-form-item style="padding-left: 5px;"
+                      label="发布时间">
+          <el-col :span="11">
+            <el-date-picker type="date"
+                            placeholder="选择开始时间"
+                            v-model="filters.dateBegin"
+                            style="width: 100%;"></el-date-picker>
+          </el-col>
+          <el-col :span="1">&nbsp;~</el-col>
+          <el-col :span="11">
+            <el-date-picker type="date"
+                            placeholder="选择结束时间"
+                            v-model="filters.dateEnd"
+                            style="width: 100%;"></el-date-picker>
+          </el-col>
         </el-form-item>
         <el-form-item>
           <el-button type="primary"
-                     v-on:click="getUsers">查询</el-button>
+                     v-on:click="getArticles">查询</el-button>
         </el-form-item>
         <el-form-item>
           <el-button type="primary"
@@ -22,7 +38,7 @@
     </el-col>
 
     <!--列表-->
-    <el-table :data="users"
+    <el-table :data="articles"
               highlight-current-row
               v-loading="listLoading"
               @selection-change="selsChange"
@@ -31,39 +47,44 @@
                        width="55">
       </el-table-column>
       <el-table-column type="index"
-                       width="60">
+                       width="55">
       </el-table-column>
-      <el-table-column prop="name"
+      <el-table-column prop="title"
                        label="文章标题"
                        width="120"
                        sortable>
       </el-table-column>
-      <el-table-column prop="age"
+      <el-table-column prop="article_desc"
                        label="文章描述"
-                       width="120"
-                       sortable>
+                       width="120">
       </el-table-column>
-      <el-table-column prop="sex"
+      <el-table-column prop="article_type_title"
                        label="文章类型"
                        width="120"
-                       :formatter="formatSex"
                        sortable>
       </el-table-column>
-      <el-table-column prop="sex"
+      <el-table-column prop="status"
                        label="文章状态"
                        width="120"
-                       :formatter="formatSex"
+                       :formatter="formatStatus"
                        sortable>
       </el-table-column>
-      <el-table-column prop="birth"
+      <el-table-column prop="publish_date"
                        label="发布日期"
                        width="120"
                        sortable>
       </el-table-column>
-      <el-table-column prop="addr"
+      <el-table-column prop="thumbnail"
                        label="缩略图"
-                       min-width="180"
-                       sortable>
+                       width="120">
+        <template slot-scope="scope">
+          <img :src="scope.row.thumbnail"
+               width="100px" />
+        </template>
+      </el-table-column>
+      <el-table-column prop="text"
+                       label="文章内容"
+                       min-width="140">
       </el-table-column>
       <el-table-column label="操作"
                        width="150">
@@ -101,43 +122,39 @@
                :rules="editFormRules"
                ref="editForm">
         <el-form-item label="文章标题"
-                      prop="name">
-          <el-input v-model="editForm.name"
+                      prop="title">
+          <el-input v-model="editForm.title"
                     auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="文章描述">
-          <el-input-number v-model="editForm.age"
-                           :min="0"
-                           :max="200"></el-input-number>
+        <el-form-item label="文章描述"
+                      prop="article_desc">
+          <el-input v-model="editForm.article_desc"
+                    auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="文章类型">
-          <el-radio-group v-model="editForm.sex">
-            <el-radio class="radio"
-                      :label="1">男</el-radio>
-            <el-radio class="radio"
-                      :label="0">女</el-radio>
-          </el-radio-group>
+        <el-form-item label="缩略图"
+                      prop="thumbnail">
+          <el-input v-model="editForm.thumbnail"
+                    auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="缩略图">
-          <el-date-picker type="date"
-                          placeholder="选择日期"
-                          v-model="editForm.birth"></el-date-picker>
-        </el-form-item>
-        <div class="edit_container">
-          <!--  新增时输入 -->
-          <quill-editor v-model="editForm.content"
-                        ref="myQuillEditor"
-                        :options="editForm.editorOption"
-                        @blur="onEditorBlur($event)"
-                        @focus="onEditorFocus($event)"
-                        @change="onEditorChange($event)">
-          </quill-editor>
-          <!-- 从数据库读取展示 -->
-          <div v-html="editForm.str"
-               class="ql-editor">
-            {{editForm.str}}
+        <el-form-item label="文章内容"
+                      prop="html">
+          <div class="edit_container">
+            <!--  新增时输入 -->
+            <quill-editor v-model="editForm.html"
+                          ref="myQuillEditor"
+                          :options="editForm.editorOption"
+                          @blur="onEditorBlur($event)"
+                          @focus="onEditorFocus($event)"
+                          @change="onEditorChange($event)">
+            </quill-editor>
+            <!-- 从数据库读取展示 -->
+            <div v-show="0"
+                 v-html="editForm.text"
+                 class="ql-editor">
+              {{editForm.text}}
+            </div>
           </div>
-        </div>
+        </el-form-item>
       </el-form>
       <div slot="footer"
            class="dialog-footer">
@@ -158,43 +175,42 @@
                :rules="addFormRules"
                ref="addForm">
         <el-form-item label="文章标题"
-                      prop="name">
-          <el-input v-model="addForm.name"
+                      prop="title">
+          <el-input v-model="addForm.title"
                     auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="文章描述">
-          <el-input-number v-model="addForm.age"
-                           :min="0"
-                           :max="200"></el-input-number>
+        <el-form-item label="文章描述"
+                      prop="article_desc">
+          <el-input v-model="addForm.article_desc"
+                    auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="文章类型">
-          <el-radio-group v-model="addForm.sex">
-            <el-radio class="radio"
-                      :label="1">男</el-radio>
-            <el-radio class="radio"
-                      :label="0">女</el-radio>
-          </el-radio-group>
+        <el-form-item label="缩略图"
+                      prop="thumbnail">
+          <el-input v-model="addForm.thumbnail"
+                    auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="缩略图">
-          <el-date-picker type="date"
-                          placeholder="选择日期"
-                          v-model="addForm.birth"></el-date-picker>
-        </el-form-item>
-        <div class="edit_container">
-          <!--  新增时输入 -->
-          <quill-editor v-model="addForm.content"
-                        ref="myQuillEditor"
-                        :options="addForm.editorOption"
-                        @blur="onEditorBlur($event)"
-                        @focus="onEditorFocus($event)"
-                        @change="onEditorChange($event)">
-          </quill-editor>
-          <!-- 从数据库读取展示 -->
-          <div v-html="addForm.str"
-               class="ql-editor">
-            {{addForm.str}}
+
+        <el-form-item label="文章内容"
+                      prop="html">
+          <div class="edit_container">
+            <!--  新增时输入 -->
+            <quill-editor v-model="addForm.html"
+                          prop="html"
+                          ref="myQuillEditor"
+                          :options="addForm.editorOption"
+                          @blur="onEditorBlur($event)"
+                          @focus="onEditorFocus($event)"
+                          @change="onEditorChange($event)">
+            </quill-editor>
+            <!-- 从数据库读取展示 -->
+
+            <div v-show="0"
+                 v-html="addForm.text"
+                 class="ql-editor">
+              {{addForm.text}}
+            </div>
           </div>
-        </div>
+        </el-form-item>
       </el-form>
       <div slot="footer"
            class="dialog-footer">
@@ -209,8 +225,8 @@
 
 <script>
 import util from '../../common/js/util'
-//import NProgress from 'nprogress'
-import { getUserListPage, removeUser, batchRemoveUser, editUser, addUser } from '../../api/api';
+// import NProgress from 'nprogress'
+import { getArticleList, addArticle, modifyArticle, getArticleDetail, batchRemoveArticle, removeArticle } from '../../api/api';
 
 // 引入vue编辑器
 import { quillEditor } from "vue-quill-editor";
@@ -225,9 +241,11 @@ export default {
   data () {
     return {
       filters: {
-        name: ''
+        title: '',
+        dateBegin: null,
+        dateEnd: null
       },
-      users: [],
+      articles: [],
       total: 0,
       page: 1,
       listLoading: false,
@@ -236,66 +254,95 @@ export default {
       editFormVisible: false,//编辑界面是否显示
       editLoading: false,
       editFormRules: {
-        name: [
-          { required: true, message: '请输入姓名', trigger: 'blur' }
+        title: [
+          { required: true, message: '请输入文章标题', trigger: 'blur' }
+        ],
+        article_desc: [
+          { required: true, message: '请输入文章描述', trigger: 'blur' }
+        ],
+        thumbnail: [
+          { required: true, message: '请输入文章缩略图地址', trigger: 'blur' }
+        ],
+        html: [
+          { required: true, message: '请输入文章内容', trigger: 'blur' }
         ]
       },
       //编辑界面数据
       editForm: {
         id: 0,
-        name: '',
-        sex: -1,
-        age: 0,
-        birth: '',
-        addr: '',
-        content: ``,
-        str: '',
+        title: '',
+        article_desc: '',
+        html: '',
+        text: '',
         editorOption: {}
       },
 
       addFormVisible: false,//新增界面是否显示
       addLoading: false,
       addFormRules: {
-        name: [
-          { required: true, message: '请输入姓名', trigger: 'blur' }
+        title: [
+          { required: true, message: '请输入文章标题', trigger: 'blur' },
+          { min: 3, message: '长度至少 3 个字符', trigger: 'blur' }
+        ],
+        article_desc: [
+          { required: true, message: '请输入文章标题', trigger: 'blur' },
+          { max: 128, message: '长度最多 128 个字符', trigger: 'blur' }
+        ],
+        thumbnail: [
+          { required: true, message: '请输入文章缩略图地址', trigger: 'blur' }
+        ],
+        html: [
+          { required: true, message: '请输入文章内容', trigger: 'blur' }
         ]
       },
       //新增界面数据
       addForm: {
-        name: '',
-        sex: -1,
-        age: 0,
-        birth: '',
-        addr: '',
-        content: ``,
-        str: '',
+        title: '',
+        article_desc: '',
+        html: '',
+        text: '',
         editorOption: {}
       }
 
     }
   },
   methods: {
-    //性别显示转换
-    formatSex: function (row, column) {
-      return row.sex == 1 ? '男' : row.sex == 0 ? '女' : '未知';
+    // 文章状态格式化显示
+    formatStatus: function (row, column) {
+      let status = ''
+      switch (row.status) {
+        case 0:
+          status = '暂存'
+          break
+        case 1:
+          status = '已发布'
+          break
+      }
+      return status
     },
     handleCurrentChange (val) {
       this.page = val;
-      this.getUsers();
+      this.getArticles();
     },
     //获取用户列表
-    getUsers () {
+    getArticles () {
       let para = {
-        page: this.page,
-        name: this.filters.name
+        page: this.page
       };
       this.listLoading = true;
-      //NProgress.start();
-      getUserListPage(para).then((res) => {
-        this.total = res.data.total;
-        this.users = res.data.users;
-        this.listLoading = false;
-        //NProgress.done();
+      // NProgress.start();
+      getArticleList(para).then((res) => {
+        if (res.code == -1) {
+          this.$message({
+            message: res.data.msg,
+            type: 'error'
+          });
+        } else {
+          this.total = res.data.total;
+          this.articles = res.data.list;
+          this.listLoading = false;
+          // NProgress.done();
+        }
       });
     },
     //删除
@@ -304,16 +351,16 @@ export default {
         type: 'warning'
       }).then(() => {
         this.listLoading = true;
-        //NProgress.start();
+        // NProgress.start();
         let para = { id: row.id };
-        removeUser(para).then((res) => {
+        removeArticle(para).then((res) => {
           this.listLoading = false;
-          //NProgress.done();
+          // NProgress.done();
           this.$message({
             message: '删除成功',
             type: 'success'
           });
-          this.getUsers();
+          this.getArticles();
         });
       }).catch(() => {
 
@@ -328,11 +375,11 @@ export default {
     handleAdd: function () {
       this.addFormVisible = true;
       this.addForm = {
-        name: '',
-        sex: -1,
-        age: 0,
-        birth: '',
-        addr: ''
+        title: '',
+        article_desc: '',
+        html: '',
+        text: '',
+        editorOption: {}
       };
     },
     //编辑
@@ -341,19 +388,18 @@ export default {
         if (valid) {
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
             this.editLoading = true;
-            //NProgress.start();
+            // NProgress.start();
             let para = Object.assign({}, this.editForm);
-            para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-            editUser(para).then((res) => {
+            modifyArticle(para).then((res) => {
               this.editLoading = false;
-              //NProgress.done();
+              // NProgress.done();
               this.$message({
                 message: '提交成功',
                 type: 'success'
               });
               this.$refs['editForm'].resetFields();
               this.editFormVisible = false;
-              this.getUsers();
+              this.getArticles();
             });
           });
         }
@@ -365,19 +411,26 @@ export default {
         if (valid) {
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
             this.addLoading = true;
-            //NProgress.start();
+            // NProgress.start();
             let para = Object.assign({}, this.addForm);
-            para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-            addUser(para).then((res) => {
+            para.text = this.escapeStringHTML(para.html)
+            addArticle(para).then((res) => {
               this.addLoading = false;
-              //NProgress.done();
-              this.$message({
-                message: '提交成功',
-                type: 'success'
-              });
-              this.$refs['addForm'].resetFields();
-              this.addFormVisible = false;
-              this.getUsers();
+              // NProgress.done();
+              if (res.code == -1) {
+                this.$message({
+                  message: res.msg,
+                  type: 'error'
+                });
+              } else {
+                this.$message({
+                  message: '提交成功',
+                  type: 'success'
+                });
+                this.$refs['addForm'].resetFields();
+                this.addFormVisible = false;
+                this.getArticles();
+              }
             });
           });
         }
@@ -393,16 +446,16 @@ export default {
         type: 'warning'
       }).then(() => {
         this.listLoading = true;
-        //NProgress.start();
+        // NProgress.start();
         let para = { ids: ids };
-        batchRemoveUser(para).then((res) => {
+        batchRemoveArticle(para).then((res) => {
           this.listLoading = false;
-          //NProgress.done();
+          // NProgress.done();
           this.$message({
             message: '删除成功',
             type: 'success'
           });
-          this.getUsers();
+          this.getArticles();
         });
       }).catch(() => {
 
@@ -410,7 +463,6 @@ export default {
     },
     onEditorReady (editor) {
       // 准备编辑器
-
     },
     onEditorBlur () {
       // 失去焦点事件
@@ -434,7 +486,7 @@ export default {
     },
   },
   mounted () {
-    this.getUsers();
+    this.getArticles();
   }
 }
 

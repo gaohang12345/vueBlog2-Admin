@@ -1,91 +1,126 @@
 <template>
   <el-form ref="form"
            :model="form"
+           :rules="rules"
            label-width="80px"
            @submit.prevent="onSubmit"
            style="margin:20px;width:60%;min-width:600px;">
-    <el-form-item label="活动名称">
-      <el-input v-model="form.name"></el-input>
+    <el-form-item label="文章标题"
+                  prop="title">
+      <el-input v-model="form.title"></el-input>
     </el-form-item>
-    <el-form-item label="活动区域">
-      <el-select v-model="form.region"
-                 placeholder="请选择活动区域">
-        <el-option label="区域一"
-                   value="shanghai"></el-option>
-        <el-option label="区域二"
-                   value="beijing"></el-option>
-      </el-select>
+
+    <el-form-item label="文章描述"
+                  prop="article_desc">
+      <el-input v-model="form.article_desc"></el-input>
     </el-form-item>
-    <el-form-item label="活动时间">
-      <el-col :span="11">
-        <el-date-picker type="date"
-                        placeholder="选择日期"
-                        v-model="form.date1"
-                        style="width: 100%;"></el-date-picker>
-      </el-col>
-      <el-col class="line"
-              :span="2">-</el-col>
-      <el-col :span="11">
-        <el-time-picker type="fixed-time"
-                        placeholder="选择时间"
-                        v-model="form.date2"
-                        style="width: 100%;"></el-time-picker>
-      </el-col>
+
+    <el-form-item label="缩略图"
+                  prop="thumbnail">
+      <el-input v-model="form.thumbnail"></el-input>
     </el-form-item>
-    <el-form-item label="即时配送">
-      <el-switch on-text=""
-                 off-text=""
-                 v-model="form.delivery"></el-switch>
+
+    <el-form-item label="文章内容"
+                  prop="html">
+      <div class="edit_container">
+        <!--  新增时输入 -->
+        <quill-editor v-model="form.html"
+                      prop="html"
+                      ref="myQuillEditor"
+                      :options="form.editorOption"
+                      @blur="onEditorBlur($event)"
+                      @focus="onEditorFocus($event)"
+                      @change="onEditorChange($event)">
+        </quill-editor>
+        <!-- 从数据库读取展示 -->
+
+        <div v-show="0"
+             v-html="form.text"
+             class="ql-editor">
+          {{form.text}}
+        </div>
+      </div>
     </el-form-item>
-    <el-form-item label="活动性质">
-      <el-checkbox-group v-model="form.type">
-        <el-checkbox label="美食/餐厅线上活动"
-                     name="type"></el-checkbox>
-        <el-checkbox label="地推活动"
-                     name="type"></el-checkbox>
-        <el-checkbox label="线下主题活动"
-                     name="type"></el-checkbox>
-        <el-checkbox label="单纯品牌曝光"
-                     name="type"></el-checkbox>
-      </el-checkbox-group>
-    </el-form-item>
-    <el-form-item label="特殊资源">
-      <el-radio-group v-model="form.resource">
-        <el-radio label="线上品牌商赞助"></el-radio>
-        <el-radio label="线下场地免费"></el-radio>
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item label="活动形式">
-      <el-input type="textarea"
-                v-model="form.desc"></el-input>
-    </el-form-item>
+
     <el-form-item>
-      <el-button type="primary">立即创建</el-button>
-      <el-button @click.native.prevent>取消</el-button>
+      <el-button @click="submitForm('form')"
+                 type="primary">立即创建</el-button>
+      <el-button @click="resetForm('form')">重置</el-button>
     </el-form-item>
   </el-form>
 </template>
 
 <script>
+// 引入vue编辑器
+import { quillEditor } from "vue-quill-editor";
+import 'quill/dist/quill.core.css';
+import 'quill/dist/quill.snow.css';
+import 'quill/dist/quill.bubble.css';
+
+
 export default {
+  components: {
+    quillEditor
+  },
   data () {
     return {
       form: {
-        name: '',
-        region: '',
-        date1: '',
-        date2: '',
-        delivery: false,
-        type: [],
-        resource: '',
-        desc: ''
+        title: '',
+        article_desc: '',
+        thumbnail: '',
+        html: '',
+        text: '',
+        editorOption: {}
+      },
+      rules: {
+        title: [
+          { required: true, message: '请输入文章标题', trigger: 'blur' },
+          { min: 3, message: '长度至少 3 个字符', trigger: 'blur' }
+        ],
+        article_desc: [
+          { required: true, message: '请输入文章标题', trigger: 'blur' },
+          { max: 128, message: '长度最多 128 个字符', trigger: 'blur' }
+        ],
+        thumbnail: [
+          { required: true, message: '请输入缩略图地址', trigger: 'blur' }
+        ],
+        html: [
+          { required: true, message: '请输入文章内容', trigger: 'blur' }
+        ]
       }
+
     }
   },
   methods: {
+    submitForm (formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          // 发请求
+
+
+        } else {
+          return false;
+        }
+      });
+    },
+    resetForm (formName) {
+      this.$refs[formName].resetFields();
+    },
     onSubmit () {
       console.log('submit!');
-    }
+    },
+    onEditorReady (editor) {
+      // 准备编辑器
+    },
+    onEditorBlur () {
+      // 失去焦点事件
+    },
+    onEditorFocus () {
+      // 获得焦点事件
+    },
+    onEditorChange () {
+      // 内容改变事件
+    },
   }
 }
 
